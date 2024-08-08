@@ -1,102 +1,51 @@
-import { useEffect, useRef, useState } from "react";
+import Konva from "konva";
+import { useEffect, useState } from "react";
+import { Stage, Layer, Image } from "react-konva";
 
-function App() {
-  const [mouseData, setMouseData] = useState<any>({ x: 0, y: 0 });
-  const canvasRef = useRef(null);
-  const [canvasCTX, setCanvasCTX] = useState<any>(null);
-  const [color, setColor] = useState<any>("#000000");
-  const [size, setSize] = useState<any>(10);
-  const [shapeMode, setShapeMode] = useState(false);
+export default function App() {
+  const [image, setImage] = useState(new window.Image());
+  const onDragStart = (e: Konva.KonvaEventObject<DragEvent>) => {
+    e.target.setAttrs({
+      shadowOffSet: {
+        x: 15,
+        y: 15,
+      },
+      scaleX: 1.1,
+      scaleY: 1.1,
+    });
+  };
+  const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+    e.target.to({
+      duration: 0.5,
+      easing: Konva.Easings.ElasticEaseOut,
+      scaleX: 1,
+      scaleY: 1,
+      shadowOffsetX: 5,
+      shadowOffsetY: 5,
+    });
+  };
 
   useEffect(() => {
-    const canvas: any = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    setCanvasCTX(ctx);
-  }, [canvasRef]);
-
-  const SetPos = (e: any) => {
-    setMouseData({
-      x: e.clientX,
-      y: e.clientY,
-    });
-  };
-
-  const Draw = (e: any) => {
-    if (e.buttons !== 1) return;
-    const ctx = canvasCTX;
-    ctx.beginPath();
-    ctx.moveTo(mouseData.x, mouseData.y);
-    setMouseData({
-      x: e.clientX,
-      y: e.clientY,
-    });
-    ctx.lineTo(e.clientX, e.clientY);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = size;
-    ctx.lineCap = "round";
-    ctx.stroke();
-  };
+    const img = new window.Image();
+    img.src =
+      "https://images.unsplash.com/photo-1531804055935-76f44d7c3621?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80";
+    setImage(img);
+  }, []);
 
   return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        onMouseEnter={(e) => {
-          SetPos(e);
-        }}
-        onMouseMove={(e) => Draw(e)}
-        onMouseDown={(e) => {
-          if (!shapeMode) {
-            SetPos(e);
-          }
-        }}
-      ></canvas>
-
-      <div
-        className="controlpanel"
-        style={{
-          position: "absolute",
-          top: "0",
-          left: "0",
-          width: "100%",
-        }}
-      >
-        <input
-          type="range"
-          value={size}
-          max={40}
-          onChange={(e) => {
-            setSize(e.target.value);
-          }}
+    <Stage width={window.innerWidth} height={window.innerHeight}>
+      <Layer>
+        <Image
+          x={50}
+          y={50}
+          width={200}
+          height={200}
+          image={image}
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
         />
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => {
-            setColor(e.target.value);
-          }}
-        />
-        <button onClick={() => setShapeMode((prev) => !prev)}>
-          Shape Mode
-        </button>
-        <button
-          onClick={() => {
-            const ctx = canvasCTX;
-            ctx.clearRect(
-              0,
-              0,
-              canvasRef.current.width,
-              canvasRef.current.height
-            );
-          }}
-        >
-          Clear
-        </button>
-      </div>
-    </div>
+      </Layer>
+    </Stage>
   );
 }
-
-export default App;
