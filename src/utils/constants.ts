@@ -1,8 +1,11 @@
 type Actions = {
-  SELECT: string;
-  RECTANGLE: string;
-  CIRCLE: string;
-  SCRIBBLE: string;
+  [key in
+    | "SELECT"
+    | "RECTANGLE"
+    | "CIRCLE"
+    | "SCRIBBLE"
+    | "ARROW"
+    | "PENCIL"]: string;
 };
 
 export const DrawingActions: Actions = {
@@ -10,4 +13,6 @@ export const DrawingActions: Actions = {
   RECTANGLE: "RECTANGLE",
   CIRCLE: "CIRCLE",
   SCRIBBLE: "SCRIBBLE",
+  ARROW: "ARROW",
+  PENCIL: "PENCIL",
 };
