@@ -1,9 +1,19 @@
 import { useRef, useState } from "react";
 import { DrawingActions } from "./utils/constants";
 import { TbRectangle } from "react-icons/tb";
-import { Arrow, Circle, Layer, Rect, Stage } from "react-konva";
+import {
+  Arrow,
+  Circle,
+  Layer,
+  Line,
+  Rect,
+  Stage,
+  Transformer,
+} from "react-konva";
 import { v4 as uuid } from "uuid";
 import { FaLongArrowAltRight, FaRegCircle } from "react-icons/fa";
+import { BsCursor } from "react-icons/bs";
+import { LuPencil } from "react-icons/lu";
 
 const App = () => {
   const [action, setAction] = useState(DrawingActions.SELECT);
@@ -11,10 +21,13 @@ const App = () => {
   const [rectangles, setRectAngles] = useState<any>([]);
   const [circles, setCircles] = useState<any>([]);
   const [arrows, setArrows] = useState<any>([]);
+  const [scribbles, setScribbles] = useState<any>([]);
   const strokeColor = "#000";
   const stageRef = useRef<any>();
   const isPainting = useRef<any>();
   const currentShape = useRef<any>();
+  const isDraggable = action === DrawingActions.SELECT;
+  const transformerRef = useRef<any>();
   const onPointerDown = () => {
     if (action === DrawingActions.SELECT) return;
     const stage = stageRef.current;
@@ -57,6 +70,16 @@ const App = () => {
             fillColor,
           },
         ]);
+        break;
+      case "SCRIBBLE":
+        setScribbles([
+          ...scribbles,
+          {
+            id,
+            points: [x, y],
+            fillColor,
+          },
+        ]);
     }
   };
   const onPointerMove = () => {
@@ -90,10 +113,42 @@ const App = () => {
             return arrow;
           })
         );
+        break;
+      case "CIRCLE":
+        setCircles((circles: any) =>
+          circles.map((circle: any) => {
+            if (circle.id === currentShape.current) {
+              return {
+                ...circle,
+                radius: ((y - circle.y) ** 2 + (x - circle.x) ** 2) ** 0.5,
+              };
+            }
+            return circle;
+          })
+        );
+        break;
+      case "SCRIBBLE":
+        setScribbles((scribbles: any) =>
+          scribbles.map((scribble: any) => {
+            if (scribble.id === currentShape.current) {
+              return {
+                ...scribble,
+                points: [...scribble.points, x, y],
+              };
+            }
+            return scribble;
+          })
+        );
+        break;
     }
   };
   const onPointerUp = () => {
     isPainting.current = false;
+  };
+  const onClick = (e: any) => {
+    if (action !== DrawingActions.SELECT) return;
+    const target = e.currentTarget;
+    transformerRef.current.nodes([target]);
   };
   return (
     <>
@@ -101,6 +156,26 @@ const App = () => {
         {/* Controls */}
         <div className="absolute top-0 z-10 w-full py-2 ">
           <div className="flex justify-center items-center gap-3 py-2 px-3 w-fit mx-auto border shadow-lg rounded-lg">
+            <button
+              className={
+                action === DrawingActions.SELECT
+                  ? "bg-violet-300 p-1 rounded"
+                  : "p-1 hover:bg-violet-100 rounded"
+              }
+              onClick={() => setAction(DrawingActions.SELECT)}
+            >
+              <BsCursor size={"1.75rem"} />
+            </button>
+            <button
+              className={
+                action === DrawingActions.SCRIBBLE
+                  ? "bg-violet-300 p-1 rounded"
+                  : "p-1 hover:bg-violet-100 rounded"
+              }
+              onClick={() => setAction(DrawingActions.SCRIBBLE)}
+            >
+              <LuPencil size={"1.5rem"} />
+            </button>
             <button
               className={
                 action === DrawingActions.RECTANGLE
@@ -131,6 +206,14 @@ const App = () => {
             >
               <FaLongArrowAltRight size={"2rem"} />
             </button>
+            <input
+              type="color"
+              value={fillColor}
+              onChange={(e) => {
+                setFillColor(e.target.value);
+              }}
+              className="w-[28px] h-[28px] rounded-md"
+            />
           </div>
         </div>
         <Stage
@@ -161,8 +244,8 @@ const App = () => {
                 fill={rectangle.fillColor}
                 height={rectangle.height}
                 width={rectangle.width}
-                // draggable={isDraggable}
-                // onClick={onClick}
+                draggable={isDraggable}
+                onClick={onClick}
               />
             ))}
             {circles.map((circle: any) => (
@@ -174,6 +257,8 @@ const App = () => {
                 fill={circle.fillColor}
                 stroke={strokeColor}
                 strokeWidth={2}
+                draggable={isDraggable}
+                onClick={onClick}
               />
             ))}
             {arrows?.map((arrow: any) => (
@@ -183,8 +268,24 @@ const App = () => {
                 fill={arrow.fillColor}
                 stroke={strokeColor}
                 strokeWidth={2}
+                draggable={isDraggable}
+                onClick={onClick}
               />
             ))}
+            {scribbles?.map((scribble: any) => (
+              <Line
+                key={scribble.id}
+                points={scribble.points}
+                fill={scribble.fillColor}
+                lineCap="round"
+                lineJoin="round"
+                stroke={strokeColor}
+                strokeWidth={2}
+                draggable={isDraggable}
+                onClick={onClick}
+              />
+            ))}
+            <Transformer ref={transformerRef} />
           </Layer>
         </Stage>
       </div>
