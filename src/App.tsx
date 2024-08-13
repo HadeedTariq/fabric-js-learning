@@ -1,14 +1,16 @@
 import { useRef, useState } from "react";
 import { DrawingActions } from "./utils/constants";
 import { TbRectangle } from "react-icons/tb";
-import { Circle, Layer, Rect, Stage } from "react-konva";
+import { Arrow, Circle, Layer, Rect, Stage } from "react-konva";
 import { v4 as uuid } from "uuid";
-import { FaRegCircle } from "react-icons/fa";
+import { FaLongArrowAltRight, FaRegCircle } from "react-icons/fa";
 
 const App = () => {
   const [action, setAction] = useState(DrawingActions.SELECT);
+  const [fillColor, setFillColor] = useState("#0000");
   const [rectangles, setRectAngles] = useState<any>([]);
   const [circles, setCircles] = useState<any>([]);
+  const [arrows, setArrows] = useState<any>([]);
   const strokeColor = "#000";
   const stageRef = useRef<any>();
   const isPainting = useRef<any>();
@@ -20,61 +22,74 @@ const App = () => {
     const id = uuid();
     currentShape.current = id;
     isPainting.current = true;
-    if (action === DrawingActions.RECTANGLE) {
-      setRectAngles([
-        ...rectangles,
-        {
-          id,
-          x,
-          y,
-          height: 20,
-          width: 20,
-          fillColor: "#ff0000",
-        },
-      ]);
-    } else {
-      setCircles([
-        ...circles,
-        {
-          id,
-          x,
-          y,
-          radius: 20,
-          fillColor: "#ff0000",
-        },
-      ]);
+    switch (action) {
+      case "RECTANGLE":
+        setRectAngles([
+          ...rectangles,
+          {
+            id,
+            x,
+            y,
+            width: 20,
+            height: 20,
+            fillColor,
+          },
+        ]);
+        break;
+      case "CIRCLE":
+        setCircles([
+          ...circles,
+          {
+            x,
+            y,
+            id,
+            radius: 20,
+            fillColor,
+          },
+        ]);
+        break;
+      case "ARROW":
+        setArrows([
+          ...arrows,
+          {
+            id,
+            points: [x, y, x + 20, y + 20],
+            fillColor,
+          },
+        ]);
     }
   };
-
   const onPointerMove = () => {
-    if (!isPainting.current || action === DrawingActions.SELECT) return;
+    if (!isPainting.current) return;
     const stage = stageRef.current;
     const { x, y } = stage.getPointerPosition();
-    if (action === DrawingActions.RECTANGLE) {
-      setRectAngles((rectangles: any) =>
-        rectangles.map((rectangle: any) => {
-          if (rectangle.id === currentShape.current) {
-            return {
-              ...rectangle,
-              width: x - rectangle.x,
-              height: y - rectangle.y,
-            };
-          }
-          return rectangle;
-        })
-      );
-    } else {
-      setCircles((circles: any) =>
-        circles.map((circle: any) => {
-          if (circle.id === currentShape.current) {
-            return {
-              ...circle,
-              radius: ((y - circle.y) ** 2 + (x - circle.x) ** 2) ** 0.5,
-            };
-          }
-          return circle;
-        })
-      );
+    switch (action) {
+      case "RECTANGLE":
+        setRectAngles((rectangles: any) =>
+          rectangles.map((rectangle: any) => {
+            if (rectangle.id === currentShape.current) {
+              return {
+                ...rectangle,
+                width: x - rectangle.x,
+                height: y - rectangle.y,
+              };
+            }
+            return rectangle;
+          })
+        );
+        break;
+      case "ARROW":
+        setArrows((arrows: any) =>
+          arrows.map((arrow: any) => {
+            if (arrow.id === currentShape.current) {
+              return {
+                ...arrow,
+                points: [arrow.points[0], arrow.points[1], x, y],
+              };
+            }
+            return arrow;
+          })
+        );
     }
   };
   const onPointerUp = () => {
@@ -105,6 +120,16 @@ const App = () => {
               onClick={() => setAction(DrawingActions.CIRCLE)}
             >
               <FaRegCircle size={"1.5rem"} />
+            </button>
+            <button
+              className={
+                action === DrawingActions.ARROW
+                  ? "bg-violet-300 p-1 rounded"
+                  : "p-1 hover:bg-violet-100 rounded"
+              }
+              onClick={() => setAction(DrawingActions.ARROW)}
+            >
+              <FaLongArrowAltRight size={"2rem"} />
             </button>
           </div>
         </div>
@@ -147,6 +172,15 @@ const App = () => {
                 y={circle.y}
                 radius={circle.radius}
                 fill={circle.fillColor}
+                stroke={strokeColor}
+                strokeWidth={2}
+              />
+            ))}
+            {arrows?.map((arrow: any) => (
+              <Arrow
+                key={arrow.id}
+                points={arrow.points}
+                fill={arrow.fillColor}
                 stroke={strokeColor}
                 strokeWidth={2}
               />
