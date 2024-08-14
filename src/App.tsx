@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import { DrawingActions } from "./utils/constants";
 import { TbRectangle } from "react-icons/tb";
 import {
@@ -22,6 +22,10 @@ const App = () => {
   const [circles, setCircles] = useState<any>([]);
   const [arrows, setArrows] = useState<any>([]);
   const [scribbles, setScribbles] = useState<any>([]);
+  const [selectedElement, setSelectedElement] = useState({
+    elementType: "",
+    elementId: "",
+  });
   const strokeColor = "#000";
   const stageRef = useRef<any>();
   const isPainting = useRef<any>();
@@ -145,10 +149,74 @@ const App = () => {
   const onPointerUp = () => {
     isPainting.current = false;
   };
-  const onClick = (e: any) => {
+  const onClick = (e: any, elemId: string, elemType: string) => {
     if (action !== DrawingActions.SELECT) return;
     const target = e.currentTarget;
     transformerRef.current.nodes([target]);
+    setSelectedElement({
+      elementId: elemId,
+      elementType: elemType,
+    });
+  };
+  const onColorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFillColor(e.target.value);
+    if (selectedElement.elementId !== "") {
+      switch (selectedElement.elementType) {
+        case "rectangle":
+          const rectanglesClone = [...rectangles];
+          const rectangleIndex = rectanglesClone.findIndex(
+            (rect) => rect.id === selectedElement.elementId
+          );
+          const rectangle = rectanglesClone.find(
+            (rect) => rect.id === selectedElement.elementId
+          );
+          rectangle.fillColor = e.target.value;
+          rectanglesClone[rectangleIndex] = rectangle;
+          setRectAngles(rectanglesClone);
+          break;
+        case "circle":
+          const circlesClone = [...circles];
+          const circleIndex = circlesClone.findIndex(
+            (cir) => cir.id === selectedElement.elementId
+          );
+          const circle = circlesClone.find(
+            (cir) => cir.id === selectedElement.elementId
+          );
+          circle.fillColor = e.target.value;
+          circlesClone[circleIndex] = circle;
+          setCircles(circlesClone);
+          break;
+
+        case "scribble":
+          const scribblesClone = [...scribbles];
+          const scribbleIndex = scribblesClone.findIndex(
+            (sccr) => sccr.id === selectedElement.elementId
+          );
+          const scribble = scribblesClone.find(
+            (sccr) => sccr.id === selectedElement.elementId
+          );
+          scribble.fillColor = e.target.value;
+          scribblesClone[scribbleIndex] = scribble;
+          console.log(scribble);
+
+          setScribbles(scribblesClone);
+          break;
+
+        case "arrow":
+          const arrowsClone = [...arrows];
+          const arrowIndex = arrowsClone.findIndex(
+            (arr) => arr.id === selectedElement.elementId
+          );
+          const arrow = arrowsClone.find(
+            (arr) => arr.id === selectedElement.elementId
+          );
+          arrow.fillColor = e.target.value;
+          arrowsClone[arrowIndex] = arrow;
+
+          setArrows(arrowsClone);
+          break;
+      }
+    }
   };
   return (
     <>
@@ -209,9 +277,7 @@ const App = () => {
             <input
               type="color"
               value={fillColor}
-              onChange={(e) => {
-                setFillColor(e.target.value);
-              }}
+              onChange={onColorChange}
               className="w-[28px] h-[28px] rounded-md"
             />
           </div>
@@ -225,14 +291,21 @@ const App = () => {
           onPointerUp={onPointerUp}
         >
           <Layer>
-            {/* <Rect
+            <Rect
               x={0}
               y={0}
               height={window.innerHeight}
               width={window.innerWidth}
               fill="#ffffff"
               id="bg"
-            /> */}
+              onClick={() => {
+                transformerRef.current.nodes([]);
+                setSelectedElement({
+                  elementId: "",
+                  elementType: "",
+                });
+              }}
+            />
 
             {rectangles?.map((rectangle: any) => (
               <Rect
@@ -245,7 +318,9 @@ const App = () => {
                 height={rectangle.height}
                 width={rectangle.width}
                 draggable={isDraggable}
-                onClick={onClick}
+                onClick={(e) => {
+                  onClick(e, rectangle.id, "rectangle");
+                }}
               />
             ))}
             {circles.map((circle: any) => (
@@ -258,7 +333,10 @@ const App = () => {
                 stroke={strokeColor}
                 strokeWidth={2}
                 draggable={isDraggable}
-                onClick={onClick}
+                onClick={(e) => {
+                  onClick(e, circle.id, "circle");
+                }}
+                id={circle.id}
               />
             ))}
             {arrows?.map((arrow: any) => (
@@ -269,7 +347,9 @@ const App = () => {
                 stroke={strokeColor}
                 strokeWidth={2}
                 draggable={isDraggable}
-                onClick={onClick}
+                onClick={(e) => {
+                  onClick(e, arrow.id, "arrow");
+                }}
               />
             ))}
             {scribbles?.map((scribble: any) => (
@@ -277,12 +357,15 @@ const App = () => {
                 key={scribble.id}
                 points={scribble.points}
                 fill={scribble.fillColor}
+                shadowColor={scribble.fillColor}
                 lineCap="round"
                 lineJoin="round"
                 stroke={strokeColor}
                 strokeWidth={2}
                 draggable={isDraggable}
-                onClick={onClick}
+                onClick={(e) => {
+                  onClick(e, scribble.id, "scribble");
+                }}
               />
             ))}
             <Transformer ref={transformerRef} />
