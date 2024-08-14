@@ -5,7 +5,8 @@ type Actions = {
     | "CIRCLE"
     | "SCRIBBLE"
     | "ARROW"
-    | "PENCIL"]: string;
+    | "PENCIL"
+    | "ERASER"]: string;
 };
 
 export const DrawingActions: Actions = {
@@ -15,4 +16,5 @@ export const DrawingActions: Actions = {
   SCRIBBLE: "SCRIBBLE",
   ARROW: "ARROW",
   PENCIL: "PENCIL",
+  ERASER: "ERASER",
 };

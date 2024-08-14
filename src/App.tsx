@@ -1,4 +1,4 @@
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { DrawingActions } from "./utils/constants";
 import { TbRectangle } from "react-icons/tb";
 import {
@@ -12,7 +12,7 @@ import {
 } from "react-konva";
 import { v4 as uuid } from "uuid";
 import { FaLongArrowAltRight, FaRegCircle } from "react-icons/fa";
-import { BsCursor } from "react-icons/bs";
+import { BsCursor, BsEraser } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 
 const App = () => {
@@ -197,7 +197,6 @@ const App = () => {
           );
           scribble.fillColor = e.target.value;
           scribblesClone[scribbleIndex] = scribble;
-          console.log(scribble);
 
           setScribbles(scribblesClone);
           break;
@@ -218,6 +217,49 @@ const App = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const deleteShape = (e: KeyboardEvent) => {
+      if (e.key === "Delete") {
+        if (selectedElement.elementId !== "") {
+          switch (selectedElement.elementType) {
+            case "rectangle":
+              let rectanglesClone = [...rectangles].filter(
+                (rect) => rect.id !== selectedElement.elementId
+              );
+              setRectAngles(rectanglesClone);
+              break;
+            case "circle":
+              let circleClones = [...circles].filter(
+                (circ) => circ.id !== selectedElement.elementId
+              );
+              setCircles(circleClones);
+              break;
+
+            case "scribble":
+              const scribblesClone = [...scribbles].filter(
+                (scr) => scr.id !== selectedElement.elementId
+              );
+              setScribbles(scribblesClone);
+              break;
+
+            case "arrow":
+              const arrowsClone = [...arrows].filter(
+                (arr) => arr.id !== selectedElement.elementId
+              );
+              setArrows(arrowsClone);
+              break;
+          }
+          transformerRef.current.nodes([]);
+        }
+      }
+    };
+    window.addEventListener("keydown", deleteShape);
+    return () => {
+      window.removeEventListener("keydown", deleteShape);
+    };
+  }, [selectedElement.elementId]);
+
   return (
     <>
       <div className="relative w-full h-screen overflow-hidden">
@@ -280,6 +322,16 @@ const App = () => {
               onChange={onColorChange}
               className="w-[28px] h-[28px] rounded-md"
             />
+            <button
+              className={
+                action === DrawingActions.ERASER
+                  ? "bg-violet-300 p-1 rounded"
+                  : "p-1 hover:bg-violet-100 rounded "
+              }
+              onClick={() => setAction(DrawingActions.ERASER)}
+            >
+              <BsEraser size={"1.75rem"} />
+            </button>
           </div>
         </div>
         <Stage
@@ -289,6 +341,9 @@ const App = () => {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          className={`${
+            action === "ERASER" ? "cursor-crosshair" : "cursor-default"
+          }`}
         >
           <Layer>
             <Rect
