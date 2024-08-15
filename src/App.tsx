@@ -418,10 +418,9 @@ const App = () => {
                 key={scribble.id}
                 points={scribble.points}
                 fill={scribble.fillColor}
-                shadowColor={scribble.fillColor}
                 lineCap="round"
                 lineJoin="round"
-                stroke={strokeColor}
+                stroke={scribble.fillColor}
                 strokeWidth={2}
                 draggable={isDraggable}
                 onClick={(e) => {
