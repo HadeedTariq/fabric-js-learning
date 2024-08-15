@@ -12,7 +12,7 @@ import {
 } from "react-konva";
 import { v4 as uuid } from "uuid";
 import { FaLongArrowAltRight, FaRegCircle } from "react-icons/fa";
-import { BsCursor, BsEraser } from "react-icons/bs";
+import { BsCursor, BsDownload } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 
 const App = () => {
@@ -217,6 +217,15 @@ const App = () => {
       }
     }
   };
+  const downloadDesign = () => {
+    const uri = stageRef.current.toDataURL();
+    let link = document.createElement("a");
+    link.download = "design.png";
+    link.href = uri;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => {
     const deleteShape = (e: KeyboardEvent) => {
@@ -322,15 +331,12 @@ const App = () => {
               onChange={onColorChange}
               className="w-[28px] h-[28px] rounded-md"
             />
-            <button
-              className={
-                action === DrawingActions.ERASER
-                  ? "bg-violet-300 p-1 rounded"
-                  : "p-1 hover:bg-violet-100 rounded "
-              }
-              onClick={() => setAction(DrawingActions.ERASER)}
-            >
-              <BsEraser size={"1.75rem"} />
+            <button>
+              <BsDownload
+                size={"1.75rem"}
+                className="hover:text-red-500 transition-colors duration-300"
+                onClick={downloadDesign}
+              />
             </button>
           </div>
         </div>
@@ -342,7 +348,7 @@ const App = () => {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           className={`${
-            action === "ERASER" ? "cursor-crosshair" : "cursor-default"
+            action !== "SELECT" ? "cursor-crosshair" : "cursor-default"
           }`}
         >
           <Layer>
